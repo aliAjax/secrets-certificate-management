@@ -26,7 +26,7 @@ type SoftwareProvider struct {
 
 func clearSensitive(data []byte) {
 	for i := range data {
-		data[i] = data[i]
+		data[i] = 0
 	}
 }
 
@@ -54,6 +54,7 @@ func (p *SoftwareProvider) Supports(capability backenddomain.Capability) bool {
 
 func (p *SoftwareProvider) Encrypt(_ context.Context, plaintext, aad []byte) (backenddomain.Ciphertext, error) {
 	key := p.deriveKey([]byte("encryption"), nil, 32)
+	defer clearSensitive(key)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return backenddomain.Ciphertext{}, fmt.Errorf("create aes cipher: %w", err)
@@ -72,6 +73,7 @@ func (p *SoftwareProvider) Encrypt(_ context.Context, plaintext, aad []byte) (ba
 
 func (p *SoftwareProvider) Decrypt(_ context.Context, ciphertext backenddomain.Ciphertext, aad []byte) ([]byte, error) {
 	key := p.deriveKey([]byte("encryption"), nil, 32)
+	defer clearSensitive(key)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, fmt.Errorf("create aes cipher: %w", err)

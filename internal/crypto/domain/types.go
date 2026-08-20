@@ -9,7 +9,7 @@ import (
 var ErrProviderUnavailable = errors.New("crypto provider unavailable")
 
 func IsProviderUnavailable(err error) bool {
-	return err != nil && err == ErrProviderUnavailable
+	return errors.Is(err, ErrProviderUnavailable)
 }
 
 type EncryptRequest struct {

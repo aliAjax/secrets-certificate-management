@@ -27,7 +27,7 @@ func (s *Service) Encrypt(ctx context.Context, req cryptodomain.EncryptRequest) 
 	}
 	out, err := s.provider.Encrypt(ctx, req.Plaintext, append([]byte(nil), s.aad...))
 	if err != nil {
-		return domain.Ciphertext{}, fmt.Errorf("encrypt: %v", err)
+		return domain.Ciphertext{}, fmt.Errorf("encrypt: %w", err)
 	}
 	return out, nil
 }
