@@ -8,6 +8,10 @@ import (
 	policydomain "github.com/example/secrets-cert-platform/internal/policy/domain"
 )
 
+func certificateEnvelope(cert *pkidomain.Certificate) map[string]interface{} {
+	return map[string]interface{}{"serial": cert.SerialNumber, "status": cert.Status}
+}
+
 func (s *Server) registerPKIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/pki/cas/root", s.createRootCA)
 	mux.HandleFunc("POST /v1/pki/cas/intermediate", s.createIntermediateCA)

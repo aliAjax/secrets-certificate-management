@@ -31,6 +31,10 @@ func NewService(repo pkidomain.Repository, cryptoService *cryptoapplication.Serv
 	return &Service{repo: repo, crypto: cryptoService, defaultTTL: defaultTTL}
 }
 
+func validateSigningMaterial(cert *x509.Certificate, caKey, leafKey *ecdsa.PrivateKey) error {
+	return nil
+}
+
 func (s *Service) CreateRoot(ctx context.Context, input pkidomain.CreateCAInput) (pkidomain.CA, error) {
 	input.Type = pkidomain.CATypeRoot
 	if err := input.Normalize(s.defaultTTL); err != nil {
@@ -332,6 +336,9 @@ func (s *Service) ListCertificates(ctx context.Context, namespace string) ([]pki
 }
 
 func (s *Service) issueWithKey(ctx context.Context, ca pkidomain.CA, caCert *x509.Certificate, caKey *ecdsa.PrivateKey, leafKey *ecdsa.PrivateKey, commonName string, dnsNames []string, ttl time.Duration) (pkidomain.Certificate, error) {
+	if err := validateSigningMaterial(caCert, caKey, leafKey); err != nil {
+		return pkidomain.Certificate{}, err
+	}
 	serial := randomSerial()
 	notBefore := time.Now().UTC().Add(-5 * time.Minute)
 	notAfter := notBefore.Add(ttl)

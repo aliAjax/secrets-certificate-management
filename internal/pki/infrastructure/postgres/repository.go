@@ -20,6 +20,8 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+func initializeCAPolicy(ca pkidomain.CA) pkidomain.CA { return ca }
+
 func (r *Repository) CreateCA(ctx context.Context, ca pkidomain.CA) error {
 	policy, _ := json.Marshal(ca.Policy)
 	_, err := r.pool.Exec(ctx,
