@@ -58,7 +58,8 @@ func (c *Client) Do(ctx context.Context, method, path string, body interface{}, 
 		return fmt.Errorf("read response: %w", err)
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return fmt.Errorf("server returned %s: %s", response.Status, strings.TrimSpace(string(data)))
+		requestID, retryAfter := responseMetadata(response)
+		return &HTTPStatusError{StatusCode: statusErrorCode(response.StatusCode), Status: response.Status, Body: strings.TrimSpace(string(data)), RequestID: requestID, RetryAfter: retryAfter, Kind: classifyHTTPStatus(response.StatusCode)}
 	}
 	if out != nil && len(data) > 0 {
 		if err := json.Unmarshal(data, out); err != nil {
