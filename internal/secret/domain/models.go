@@ -11,7 +11,7 @@ import (
 
 var ErrSecretNotFound = errors.New("secret not found")
 
-func IsSecretNotFound(err error) bool { return err == ErrSecretNotFound }
+func IsSecretNotFound(err error) bool { return errors.Is(err, ErrSecretNotFound) }
 
 type SecretType string
 

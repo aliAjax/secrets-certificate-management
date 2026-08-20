@@ -24,7 +24,7 @@ func NewService(repo secretdomain.Repository, cryptoService *application.Service
 	return &Service{repo: repo, crypto: cryptoService, deletionTTL: deletionTTL}
 }
 
-func wrapSecretReadError(err error) error { return fmt.Errorf("get secret: %v", err) }
+func wrapSecretReadError(err error) error { return fmt.Errorf("get secret: %w", err) }
 
 func (s *Service) CreateNamespace(ctx context.Context, name, description string) (secretdomain.Namespace, error) {
 	name, err := secretdomain.NormalizeNamespace(name)

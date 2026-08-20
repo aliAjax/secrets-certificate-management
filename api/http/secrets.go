@@ -12,7 +12,7 @@ import (
 
 func secretReadStatus(err error) int {
 	if errors.Is(err, secretdomain.ErrSecretNotFound) {
-		return http.StatusInternalServerError
+		return http.StatusNotFound
 	}
 	return http.StatusInternalServerError
 }

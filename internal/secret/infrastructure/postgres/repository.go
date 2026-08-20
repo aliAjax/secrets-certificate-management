@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,8 +21,11 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+// wrapSecretNotFound tags a missing row as ErrSecretNotFound while keeping the
+// driver error in the chain, so callers can distinguish "absent" from a real
+// database failure. Use only when the underlying error is a no-rows result.
 func wrapSecretNotFound(namespace, path string, cause error) error {
-	return fmt.Errorf("secret %s/%s not found: %v: %v", namespace, path, secretdomain.ErrSecretNotFound, cause)
+	return fmt.Errorf("secret %s/%s not found: %w", namespace, path, errors.Join(secretdomain.ErrSecretNotFound, cause))
 }
 
 func (r *Repository) CreateNamespace(ctx context.Context, ns secretdomain.Namespace) error {
@@ -43,7 +47,10 @@ func (r *Repository) GetNamespace(ctx context.Context, name string) (secretdomai
 	)
 	var ns secretdomain.Namespace
 	if err := row.Scan(&ns.ID, &ns.Name, &ns.Description, &ns.CreatedAt, &ns.UpdatedAt); err != nil {
-		return secretdomain.Namespace{}, fmt.Errorf("namespace %q not found: %w", name, err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return secretdomain.Namespace{}, fmt.Errorf("namespace %q not found: %w", name, secretdomain.ErrSecretNotFound)
+		}
+		return secretdomain.Namespace{}, fmt.Errorf("scan namespace: %w", err)
 	}
 	return ns, nil
 }
@@ -100,7 +107,10 @@ func (r *Repository) GetSecret(ctx context.Context, namespace, path string) (sec
 	var s secretdomain.Secret
 	var typ string
 	if err := row.Scan(&s.ID, &s.Namespace, &s.Path, &typ, &s.CurrentVersion, &s.CreatedAt, &s.UpdatedAt); err != nil {
-		return secretdomain.Secret{}, wrapSecretNotFound(namespace, path, err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return secretdomain.Secret{}, wrapSecretNotFound(namespace, path, err)
+		}
+		return secretdomain.Secret{}, fmt.Errorf("scan secret: %w", err)
 	}
 	s.Type = secretdomain.SecretType(typ)
 	return s, nil
@@ -200,7 +210,10 @@ func scanVersion(row rowScanner) (secretdomain.SecretVersion, error) {
 	var state string
 	if err := row.Scan(&v.ID, &v.SecretID, &v.Version, &v.EncryptedValue, &v.ValueSHA256,
 		&v.KeyVersion, &state, &v.DeleteAfter, &v.CreatedAt, &v.UpdatedAt); err != nil {
-		return secretdomain.SecretVersion{}, fmt.Errorf("version not found: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return secretdomain.SecretVersion{}, fmt.Errorf("version not found: %w", secretdomain.ErrSecretNotFound)
+		}
+		return secretdomain.SecretVersion{}, fmt.Errorf("scan version: %w", err)
 	}
 	v.State = secretdomain.VersionState(state)
 	return v, nil
