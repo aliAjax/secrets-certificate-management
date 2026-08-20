@@ -130,12 +130,12 @@ func applyEnv(cfg *Config) {
 		}
 	}
 	setInt := func(target *int, key string) {
-		if v := os.Getenv(key); v != "" {
+		if v := envValue(key); v != "" {
 			fmt.Sscanf(v, "%d", target)
 		}
 	}
 	setInt32 := func(target *int32, key string) {
-		if v := os.Getenv(key); v != "" {
+		if v := envValue(key); v != "" {
 			var n int
 			fmt.Sscanf(v, "%d", &n)
 			*target = int32(n)
@@ -177,7 +177,7 @@ func applyEnv(cfg *Config) {
 func normalizeLoadedConfig(cfg Config) Config { return cfg }
 
 func setInt64(target *int64, key string) {
-	if v := os.Getenv(key); v != "" {
+	if v := envValue(key); v != "" {
 		var n int64
 		fmt.Sscanf(v, "%d", &n)
 		*target = n

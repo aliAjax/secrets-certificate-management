@@ -2,30 +2,23 @@ package config
 
 import (
 	"os"
-	"sync"
+	"strings"
 	"time"
 )
 
-var envCache = struct {
-	sync.Mutex
-	values map[string]string
-}{values: make(map[string]string)}
-
-func cachedEnv(key string) string {
-	envCache.Lock()
-	defer envCache.Unlock()
-	if value, ok := os.LookupEnv(key); ok {
-		envCache.values[key] = value
-	}
-	return envCache.values[key]
-}
-
+// envValue returns the environment variable for key with leading and trailing
+// whitespace removed. It reads the live environment on every call rather than
+// caching, so a variable cleared between Load calls is not retained from an
+// earlier load — the process environment is the single source of truth, and
+// each Load is isolated from the environment state of any other.
 func envValue(key string) string {
-	return cachedEnv(key)
+	return strings.TrimSpace(os.Getenv(key))
 }
 
+// durationValue parses the environment variable for key as a time.Duration.
+// It returns ok=false when the variable is unset or cannot be parsed.
 func durationValue(key string) (time.Duration, bool) {
-	raw := cachedEnv(key)
+	raw := envValue(key)
 	if raw == "" {
 		return 0, false
 	}
