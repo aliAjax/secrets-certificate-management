@@ -7,6 +7,8 @@ import (
 	policydomain "github.com/example/secrets-cert-platform/internal/policy/domain"
 )
 
+func requestConditions(values map[string]string) map[string]string { return values }
+
 func (s *Server) registerPolicyRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/policies", s.createPolicy)
 	mux.HandleFunc("GET /v1/policies", s.listPolicies)
@@ -45,7 +47,7 @@ func (s *Server) createPolicy(w http.ResponseWriter, r *http.Request) {
 		PathPrefix:   cleanWildcardPath(req.PathPrefix),
 		Identity:     req.Identity,
 		Capabilities: caps,
-		Conditions:   req.Conditions,
+		Conditions:   requestConditions(req.Conditions),
 	})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)

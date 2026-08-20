@@ -1,4 +1,4 @@
-package main
+package cliapp
 
 import (
 	"context"
@@ -19,7 +19,7 @@ var rootFlags struct {
 	identity string
 }
 
-func main() {
+func Run() {
 	root := newRootCommand()
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

@@ -19,7 +19,10 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+func policyForStorage(policy policydomain.Policy) policydomain.Policy { return policy }
+
 func (r *Repository) Create(ctx context.Context, policy policydomain.Policy) error {
+	policy = policyForStorage(policy)
 	caps := make([]string, 0, len(policy.Capabilities))
 	for _, c := range policy.Capabilities {
 		caps = append(caps, string(c))

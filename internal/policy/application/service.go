@@ -21,6 +21,8 @@ func NewService(repo policydomain.Repository, adminIdentity string) *Service {
 	return &Service{repo: repo, adminIdentity: adminIdentity}
 }
 
+func cloneConditions(values map[string]string) map[string]string { return values }
+
 func (s *Service) Create(ctx context.Context, input policydomain.CreateInput) (policydomain.Policy, error) {
 	if err := input.Normalize(); err != nil {
 		return policydomain.Policy{}, err
@@ -36,7 +38,7 @@ func (s *Service) Create(ctx context.Context, input policydomain.CreateInput) (p
 		PathPrefix:   input.PathPrefix,
 		Identity:     input.Identity,
 		Capabilities: input.Capabilities,
-		Conditions:   input.Conditions,
+		Conditions:   cloneConditions(input.Conditions),
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}

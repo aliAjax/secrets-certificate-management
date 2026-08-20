@@ -47,6 +47,8 @@ type AuthorizationRequest struct {
 	Context    map[string]string
 }
 
+func CloneCapabilities(values []Capability) []Capability { return values }
+
 func ValidateCapability(value string) (Capability, error) {
 	switch Capability(value) {
 	case CapabilityRead, CapabilityCreate, CapabilityUpdate, CapabilityDelete, CapabilityList:
@@ -70,6 +72,7 @@ func (i *CreateInput) Normalize() error {
 	if len(i.Capabilities) == 0 {
 		return fmt.Errorf("at least one capability is required")
 	}
+	i.Capabilities = CloneCapabilities(i.Capabilities)
 	if i.Conditions == nil {
 		i.Conditions = map[string]string{}
 	}
