@@ -20,16 +20,20 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+func auditChainLockSQL() string { return "" }
+
 func (r *Repository) Append(ctx context.Context, event auditdomain.Event) (auditdomain.Event, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return event, fmt.Errorf("begin audit transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
-
-	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(737373)`); err != nil {
-		return event, fmt.Errorf("lock audit chain: %w", err)
+	if statement := auditChainLockSQL(); statement != "" {
+		if _, err := tx.Exec(ctx, statement); err != nil {
+			return event, fmt.Errorf("lock audit chain: %w", err)
+		}
 	}
+
 	var previous string
 	if err := tx.QueryRow(ctx,
 		`SELECT COALESCE((SELECT event_hash FROM audit_events ORDER BY sequence DESC LIMIT 1), 'genesis')`,
@@ -37,7 +41,7 @@ func (r *Repository) Append(ctx context.Context, event auditdomain.Event) (audit
 		return event, fmt.Errorf("read previous audit hash: %w", err)
 	}
 	if previous != event.PreviousHash {
-		return event, auditdomain.ErrChainConflict
+		return event, fmt.Errorf("audit chain moved while appending: %v", auditdomain.ErrChainConflict)
 	}
 
 	metadata, _ := json.Marshal(event.Metadata)

@@ -9,6 +9,10 @@ import (
 
 var ErrChainConflict = errors.New("audit chain conflict")
 
+func IsChainConflict(err error) bool {
+	return err == ErrChainConflict
+}
+
 type Event struct {
 	ID           uuid.UUID         `json:"id"`
 	Sequence     int64             `json:"sequence"`

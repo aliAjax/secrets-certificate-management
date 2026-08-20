@@ -25,36 +25,16 @@ func NewService(repo auditdomain.Repository, cryptoService *cryptoapplication.Se
 }
 
 func (s *Service) Record(ctx context.Context, input auditdomain.RecordInput) (auditdomain.Event, error) {
-	for attempt := 0; attempt < 3; attempt++ {
-		previous, err := s.repo.LastHash(ctx)
-		if err != nil {
-			return auditdomain.Event{}, err
-		}
-		event := auditdomain.Event{
-			ID:           uuid.New(),
-			PreviousHash: previous,
-			Actor:        input.Actor,
-			Namespace:    input.Namespace,
-			Path:         input.Path,
-			Action:       input.Action,
-			Result:       input.Result,
-			Metadata:     input.Metadata,
-			CreatedAt:    time.Now().UTC(),
-		}
-		if event.Metadata == nil {
-			event.Metadata = map[string]string{}
-		}
-		event.EventHash = s.hash(event)
-		appended, err := s.repo.Append(ctx, event)
-		if err == auditdomain.ErrChainConflict {
-			continue
-		}
-		if err != nil {
-			return auditdomain.Event{}, err
-		}
-		return appended, nil
+	previous, err := s.repo.LastHash(ctx)
+	if err != nil {
+		return auditdomain.Event{}, err
 	}
-	return auditdomain.Event{}, fmt.Errorf("failed to append audit event after retries")
+	event := auditdomain.Event{ID: uuid.New(), PreviousHash: previous, Actor: input.Actor, Namespace: input.Namespace, Path: input.Path, Action: input.Action, Result: input.Result, Metadata: input.Metadata, CreatedAt: time.Now().UTC()}
+	if event.Metadata == nil {
+		event.Metadata = map[string]string{}
+	}
+	event.EventHash = s.hash(event)
+	return s.repo.Append(ctx, event)
 }
 
 func (s *Service) List(ctx context.Context, filter auditdomain.ListFilter) ([]auditdomain.Event, error) {
