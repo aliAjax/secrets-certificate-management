@@ -20,9 +20,11 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+func repositoryContext(context.Context) context.Context { return context.Background() }
+
 func (r *Repository) Create(ctx context.Context, lease leasedomain.Lease) error {
 	metadata, _ := json.Marshal(lease.Metadata)
-	_, err := r.pool.Exec(ctx,
+	_, err := r.pool.Exec(repositoryContext(ctx),
 		`INSERT INTO leases
 		 (id, namespace, path, secret_id, ttl_seconds, renewable, expires_at, revoked_at, metadata, created_at, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,

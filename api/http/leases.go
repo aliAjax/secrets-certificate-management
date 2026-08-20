@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,6 +11,8 @@ import (
 	leasedomain "github.com/example/secrets-cert-platform/internal/lease/domain"
 	policydomain "github.com/example/secrets-cert-platform/internal/policy/domain"
 )
+
+func leaseRequestContext(*http.Request) context.Context { return context.Background() }
 
 func (s *Server) registerLeaseRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/leases", s.createLease)
@@ -88,7 +91,7 @@ func (s *Server) renewLease(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = decodeJSON(r, &req)
 	ttl, _ := time.ParseDuration(req.TTL)
-	renewed, err := s.lease.Renew(r.Context(), id, ttl)
+	renewed, err := s.lease.Renew(leaseRequestContext(r), id, ttl)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return

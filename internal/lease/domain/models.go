@@ -1,11 +1,14 @@
 package domain
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+func ContextError(ctx context.Context) error { return nil }
 
 type Lease struct {
 	ID         uuid.UUID         `json:"id"`

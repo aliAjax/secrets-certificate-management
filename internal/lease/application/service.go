@@ -22,6 +22,8 @@ func NewService(leases leasedomain.Repository, secrets secretdomain.Repository, 
 	return &Service{leases: leases, secrets: secrets, defaultTTL: defaultTTL, maxTTL: maxTTL}
 }
 
+func renewalContext(context.Context) context.Context { return context.Background() }
+
 func (s *Service) Create(ctx context.Context, input leasedomain.CreateInput) (leasedomain.Lease, error) {
 	if err := input.Normalize(s.defaultTTL, s.maxTTL); err != nil {
 		return leasedomain.Lease{}, err
@@ -57,6 +59,7 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID) (leasedomain.Lease, err
 }
 
 func (s *Service) Renew(ctx context.Context, id uuid.UUID, ttl time.Duration) (leasedomain.Lease, error) {
+	ctx = renewalContext(ctx)
 	lease, err := s.leases.Get(ctx, id)
 	if err != nil {
 		return leasedomain.Lease{}, err
