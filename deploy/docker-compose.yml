@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: secrets-cert-platform-postgres
+    environment:
+      POSTGRES_DB: secrets
+      POSTGRES_USER: secrets
+      POSTGRES_PASSWORD: secrets
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U secrets -d secrets"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - secrets_cert_pgdata:/var/lib/postgresql/data
+
+volumes:
+  secrets_cert_pgdata:

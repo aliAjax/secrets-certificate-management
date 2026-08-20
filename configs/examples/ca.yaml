@@ -1,0 +1,8 @@
+name: root-a
+namespace: tenant-a
+type: root
+common_name: Root A
+ttl: 8760h
+max_path_len: 1
+dns_domains:
+  - root.example.internal

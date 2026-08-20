@@ -1,0 +1,38 @@
+server:
+  http_addr: ":8080"
+  grpc_addr: ":9090"
+  shutdown_timeout: 10s
+  request_timeout: 15s
+
+database:
+  dsn: "postgres://secrets:secrets@localhost:55432/secrets?sslmode=disable"
+  migrations_dir: "migrations"
+  max_connections: 20
+
+tls:
+  enabled: false
+  cert_file: ""
+  key_file: ""
+  client_ca_file: ""
+  require_client_cert: false
+  min_version: "1.2"
+
+crypto:
+  master_key: "development-master-key-change-me"
+  audit_key: "development-audit-key-change-me"
+  encryption_aad: "secrets-cert-platform"
+
+auth:
+  admin_token: "dev-admin-token"
+  identity_header: "X-Auth-Identity"
+  token_header: "X-Auth-Token"
+
+limits:
+  max_body_bytes: 1048576
+  rate_per_second: 100
+  rate_burst: 200
+
+defaults:
+  lease_default_ttl: "1h"
+  lease_max_ttl: "24h"
+  version_deletion_ttl: "72h"

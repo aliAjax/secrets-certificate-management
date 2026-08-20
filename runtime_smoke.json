@@ -1,0 +1,6 @@
+{
+  "mode": "oneshot",
+  "start": "go test ./cmd/server -run '^$' -count=1",
+  "expected_exit": 0,
+  "startup_timeout": 30
+}

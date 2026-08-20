@@ -1,0 +1,9 @@
+name: alice-read-db
+namespace: tenant-a
+path_prefix: /db
+identity: alice
+capabilities:
+  - read
+  - list
+conditions:
+  ip: "10.0.0.0/8"
