@@ -48,7 +48,9 @@ type CA struct {
 	UpdatedAt           time.Time         `json:"updated_at"`
 }
 
-func (c CA) ReadyForIssuance() bool { return c.CertificatePEM != "" }
+func (c CA) ReadyForIssuance() bool {
+	return c.CertificatePEM != "" && len(c.EncryptedPrivateKey) > 0 && c.KeyVersion != ""
+}
 
 type Certificate struct {
 	ID                  uuid.UUID         `json:"id"`

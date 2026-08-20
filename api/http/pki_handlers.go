@@ -9,6 +9,9 @@ import (
 )
 
 func certificateEnvelope(cert *pkidomain.Certificate) map[string]interface{} {
+	if cert == nil {
+		return map[string]interface{}{"serial": "", "status": "unavailable"}
+	}
 	return map[string]interface{}{"serial": cert.SerialNumber, "status": cert.Status}
 }
 

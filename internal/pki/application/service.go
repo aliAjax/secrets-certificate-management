@@ -32,6 +32,15 @@ func NewService(repo pkidomain.Repository, cryptoService *cryptoapplication.Serv
 }
 
 func validateSigningMaterial(cert *x509.Certificate, caKey, leafKey *ecdsa.PrivateKey) error {
+	if cert == nil {
+		return fmt.Errorf("signing ca certificate is required")
+	}
+	if caKey == nil {
+		return fmt.Errorf("ca signing key is required")
+	}
+	if leafKey == nil {
+		return fmt.Errorf("leaf key is required")
+	}
 	return nil
 }
 
@@ -166,6 +175,9 @@ func (s *Service) Issue(ctx context.Context, input pkidomain.IssueInput) (pkidom
 	if err != nil {
 		return pkidomain.Certificate{}, err
 	}
+	if !ca.ReadyForIssuance() {
+		return pkidomain.Certificate{}, fmt.Errorf("ca %q is not ready for issuance: missing certificate or key material", input.CAName)
+	}
 	caCert, err := parseCertificate(ca.CertificatePEM)
 	if err != nil {
 		return pkidomain.Certificate{}, err
@@ -195,6 +207,9 @@ func (s *Service) Renew(ctx context.Context, input pkidomain.RenewInput) (pkidom
 	ca, err := s.repo.GetCAByID(ctx, *existing.CAID)
 	if err != nil {
 		return pkidomain.Certificate{}, err
+	}
+	if !ca.ReadyForIssuance() {
+		return pkidomain.Certificate{}, fmt.Errorf("ca %q is not ready for issuance: missing certificate or key material", ca.Name)
 	}
 	caCert, err := parseCertificate(ca.CertificatePEM)
 	if err != nil {
