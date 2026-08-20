@@ -88,6 +88,10 @@ func (s *platformService) call(ctx context.Context, method string, req map[strin
 	}
 }
 
+func requestSnapshot(req map[string]interface{}) map[string]interface{} {
+	return snapshotFence(handlerFence(req))
+}
+
 func (s *platformService) authorize(ctx context.Context, namespace, path string, capability policydomain.Capability) error {
 	allowed, err := s.server.policy.Authorize(ctx, policydomain.AuthorizationRequest{
 		Identity:   actorFromContext(ctx),

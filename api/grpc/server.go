@@ -58,6 +58,8 @@ type platformService struct {
 	server *Server
 }
 
+func handlerFence(req map[string]interface{}) map[string]interface{} { return req }
+
 type platformServiceServer interface{}
 
 var platformServiceDesc = grpc.ServiceDesc{
@@ -112,6 +114,7 @@ func methodHandler(name string) func(srv interface{}, ctx context.Context, dec f
 		if err := dec(&in); err != nil {
 			return nil, err
 		}
+		in = handlerFence(in)
 		fullMethod := "/platform.Gateway/" + name
 		info := &grpc.UnaryServerInfo{Server: srv, FullMethod: fullMethod}
 		handler := func(ctx context.Context, req interface{}) (interface{}, error) {
