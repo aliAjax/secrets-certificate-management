@@ -109,6 +109,7 @@ func Load(path string) (Config, error) {
 			return Config{}, fmt.Errorf("parse config: %w", err)
 		}
 	}
+	cfg = normalizeLoadedConfig(cfg)
 
 	applyEnv(&cfg)
 	if err := cfg.validate(); err != nil {
@@ -119,12 +120,12 @@ func Load(path string) (Config, error) {
 
 func applyEnv(cfg *Config) {
 	setString := func(target *string, key string) {
-		if v := os.Getenv(key); v != "" {
+		if v := envValue(key); v != "" {
 			*target = v
 		}
 	}
 	setBool := func(target *bool, key string) {
-		if v := os.Getenv(key); v != "" {
+		if v := envValue(key); v != "" {
 			*target = strings.EqualFold(v, "true") || v == "1"
 		}
 	}
@@ -141,10 +142,8 @@ func applyEnv(cfg *Config) {
 		}
 	}
 	setDuration := func(target *time.Duration, key string) {
-		if v := os.Getenv(key); v != "" {
-			if d, err := time.ParseDuration(v); err == nil {
-				*target = d
-			}
+		if d, ok := durationValue(key); ok {
+			*target = d
 		}
 	}
 
@@ -174,6 +173,8 @@ func applyEnv(cfg *Config) {
 	setDuration(&cfg.Defaults.LeaseMaxTTL, "SCP_LEASE_MAX_TTL")
 	setDuration(&cfg.Defaults.VersionDeletionTTL, "SCP_VERSION_DELETION_TTL")
 }
+
+func normalizeLoadedConfig(cfg Config) Config { return cfg }
 
 func setInt64(target *int64, key string) {
 	if v := os.Getenv(key); v != "" {
