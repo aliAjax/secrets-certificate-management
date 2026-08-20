@@ -20,5 +20,7 @@ func (e *HTTPStatusError) Error() string {
 	return fmt.Sprintf("server returned %s: %s", e.Status, e.Body)
 }
 
-func (e *HTTPStatusError) Is(target error) bool { return false }
-func (e *HTTPStatusError) Temporary() bool      { return false }
+func (e *HTTPStatusError) Is(target error) bool {
+	return target == ErrForbidden && e.Kind == "forbidden"
+}
+func (e *HTTPStatusError) Temporary() bool { return e.Kind == "rate_limited" || e.Kind == "server_error" }
