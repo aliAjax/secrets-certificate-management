@@ -3,7 +3,12 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
+
+func firstForwardedIdentity(value string) string {
+	return strings.TrimSpace(value)
+}
 
 type errorResponse struct {
 	Error string `json:"error"`

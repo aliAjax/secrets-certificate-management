@@ -37,3 +37,11 @@ func (s *Server) withAuth(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func normalizeRateLimitIdentity(value string) string {
+	value = firstForwardedIdentity(value)
+	if value == "" {
+		return "anonymous"
+	}
+	return value
+}

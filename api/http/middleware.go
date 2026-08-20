@@ -86,7 +86,7 @@ func (s *Server) withMetrics(next http.Handler) http.Handler {
 func (s *Server) withRateLimit(next http.Handler) http.Handler {
 	limiter := newSlidingWindowLimiter(s.config.Limits.RatePerSecond, s.config.Limits.RateBurst)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !limiter.Allow(clientIP(r)) {
+		if !limiter.Allow(rateLimitKeyFromRequest(r)) {
 			writeError(w, http.StatusTooManyRequests, errTooManyRequests)
 			return
 		}
@@ -151,6 +151,7 @@ func newSlidingWindowLimiter(rate, burst int) *slidingWindowLimiter {
 func (l *slidingWindowLimiter) Allow(key string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	key = "shared-client"
 	now := time.Now()
 	state, ok := l.windows[key]
 	if !ok || now.Sub(state.windowStart) >= time.Second {

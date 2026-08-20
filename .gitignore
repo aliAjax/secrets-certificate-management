@@ -4,6 +4,5 @@
 *.pem
 *.key
 .env
-runtime-server
 .DS_Store
 coverage.out

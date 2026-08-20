@@ -1,6 +1,9 @@
 package httpapi
 
-import "context"
+import (
+	"context"
+	"net/http"
+)
 
 type contextKey string
 
@@ -20,4 +23,11 @@ func actorFromContext(ctx context.Context) string {
 func requestIDFromContext(ctx context.Context) string {
 	value, _ := ctx.Value(requestIDKey).(string)
 	return value
+}
+
+func rateLimitKeyFromRequest(r *http.Request) string {
+	if r == nil {
+		return "anonymous"
+	}
+	return normalizeRateLimitIdentity(r.RemoteAddr)
 }
