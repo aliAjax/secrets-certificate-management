@@ -21,7 +21,9 @@ func NewService(repo policydomain.Repository, adminIdentity string) *Service {
 	return &Service{repo: repo, adminIdentity: adminIdentity}
 }
 
-func cloneConditions(values map[string]string) map[string]string { return values }
+func cloneConditions(values map[string]string) map[string]string {
+	return policydomain.CloneConditions(values)
+}
 
 func (s *Service) Create(ctx context.Context, input policydomain.CreateInput) (policydomain.Policy, error) {
 	if err := input.Normalize(); err != nil {

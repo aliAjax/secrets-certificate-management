@@ -47,7 +47,25 @@ type AuthorizationRequest struct {
 	Context    map[string]string
 }
 
-func CloneCapabilities(values []Capability) []Capability { return values }
+func CloneCapabilities(values []Capability) []Capability {
+	if values == nil {
+		return nil
+	}
+	out := make([]Capability, len(values))
+	copy(out, values)
+	return out
+}
+
+func CloneConditions(values map[string]string) map[string]string {
+	if values == nil {
+		return nil
+	}
+	out := make(map[string]string, len(values))
+	for k, v := range values {
+		out[k] = v
+	}
+	return out
+}
 
 func ValidateCapability(value string) (Capability, error) {
 	switch Capability(value) {

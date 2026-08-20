@@ -19,7 +19,19 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func policyForStorage(policy policydomain.Policy) policydomain.Policy { return policy }
+func policyForStorage(policy policydomain.Policy) policydomain.Policy {
+	return policydomain.Policy{
+		ID:           policy.ID,
+		Name:         policy.Name,
+		Namespace:    policy.Namespace,
+		PathPrefix:   policy.PathPrefix,
+		Identity:     policy.Identity,
+		Capabilities: policydomain.CloneCapabilities(policy.Capabilities),
+		Conditions:   policydomain.CloneConditions(policy.Conditions),
+		CreatedAt:    policy.CreatedAt,
+		UpdatedAt:    policy.UpdatedAt,
+	}
+}
 
 func (r *Repository) Create(ctx context.Context, policy policydomain.Policy) error {
 	policy = policyForStorage(policy)

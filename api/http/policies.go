@@ -7,7 +7,9 @@ import (
 	policydomain "github.com/example/secrets-cert-platform/internal/policy/domain"
 )
 
-func requestConditions(values map[string]string) map[string]string { return values }
+func requestConditions(values map[string]string) map[string]string {
+	return policydomain.CloneConditions(values)
+}
 
 func (s *Server) registerPolicyRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/policies", s.createPolicy)
