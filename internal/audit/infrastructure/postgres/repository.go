@@ -20,7 +20,14 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func auditChainLockSQL() string { return "" }
+func auditChainLockSQL() string {
+	// Serialize appends to the audit chain. A transaction-scoped advisory lock
+	// guarantees that only one Append at a time runs the read-previous-hash /
+	// verify / insert sequence, so concurrent writers append one after another
+	// instead of both latching onto the same previous hash and breaking the
+	// chain. The lock auto-releases on commit/rollback — no unlock needed.
+	return "SELECT pg_advisory_xact_lock(910382917)"
+}
 
 func (r *Repository) Append(ctx context.Context, event auditdomain.Event) (auditdomain.Event, error) {
 	tx, err := r.pool.Begin(ctx)
@@ -41,7 +48,7 @@ func (r *Repository) Append(ctx context.Context, event auditdomain.Event) (audit
 		return event, fmt.Errorf("read previous audit hash: %w", err)
 	}
 	if previous != event.PreviousHash {
-		return event, fmt.Errorf("audit chain moved while appending: %v", auditdomain.ErrChainConflict)
+		return event, chainConflictError(previous, event.PreviousHash)
 	}
 
 	metadata, _ := json.Marshal(event.Metadata)

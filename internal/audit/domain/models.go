@@ -9,8 +9,12 @@ import (
 
 var ErrChainConflict = errors.New("audit chain conflict")
 
+// IsChainConflict reports whether err carries the audit chain-conflict
+// sentinel, including when it has been wrapped with %w by the repository
+// while appending under contention. Use errors.Is semantics so callers can
+// detect conflicts raised from any layer of wrapping.
 func IsChainConflict(err error) bool {
-	return err == ErrChainConflict
+	return errors.Is(err, ErrChainConflict)
 }
 
 type Event struct {

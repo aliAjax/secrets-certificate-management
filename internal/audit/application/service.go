@@ -15,6 +15,14 @@ import (
 	cryptodomain "github.com/example/secrets-cert-platform/internal/crypto/domain"
 )
 
+// maxChainConflictRetries bounds how many times Record will re-read the tip of
+// the audit chain and retry the append after a concurrent writer committed
+// first. Each retry observes a fresh previous hash, so legitimate concurrent
+// writes converge instead of corrupting the chain. The advisory lock in the
+// repository still serializes the critical section; retries here absorb the
+// race between the non-locked LastHash read and the locked append.
+const maxChainConflictRetries = 8
+
 type Service struct {
 	repo   auditdomain.Repository
 	crypto *cryptoapplication.Service
@@ -25,16 +33,46 @@ func NewService(repo auditdomain.Repository, cryptoService *cryptoapplication.Se
 }
 
 func (s *Service) Record(ctx context.Context, input auditdomain.RecordInput) (auditdomain.Event, error) {
-	previous, err := s.repo.LastHash(ctx)
-	if err != nil {
-		return auditdomain.Event{}, err
+	// Build the invariant parts of the event once. Only the previous hash (and
+	// therefore the event hash) changes across retries, so we rebuild those
+	// per attempt after re-reading the chain tip.
+	base := auditdomain.Event{
+		ID:        uuid.New(),
+		Actor:     input.Actor,
+		Namespace: input.Namespace,
+		Path:      input.Path,
+		Action:    input.Action,
+		Result:    input.Result,
+		Metadata:  input.Metadata,
+		CreatedAt: time.Now().UTC(),
 	}
-	event := auditdomain.Event{ID: uuid.New(), PreviousHash: previous, Actor: input.Actor, Namespace: input.Namespace, Path: input.Path, Action: input.Action, Result: input.Result, Metadata: input.Metadata, CreatedAt: time.Now().UTC()}
-	if event.Metadata == nil {
-		event.Metadata = map[string]string{}
+	if base.Metadata == nil {
+		base.Metadata = map[string]string{}
 	}
-	event.EventHash = s.hash(event)
-	return s.repo.Append(ctx, event)
+
+	var lastErr error
+	for attempt := 0; attempt <= maxChainConflictRetries; attempt++ {
+		previous, err := s.repo.LastHash(ctx)
+		if err != nil {
+			return auditdomain.Event{}, err
+		}
+		event := base
+		event.PreviousHash = previous
+		event.EventHash = s.hash(event)
+
+		result, err := s.repo.Append(ctx, event)
+		if err == nil {
+			return result, nil
+		}
+		lastErr = err
+		// Only a chain conflict is retriable: another writer committed first,
+		// so re-read the tip and try again. Anything else (insert failure,
+		// context cancelled, etc.) aborts immediately.
+		if !auditdomain.IsChainConflict(err) {
+			return auditdomain.Event{}, err
+		}
+	}
+	return auditdomain.Event{}, fmt.Errorf("record audit event after %d retries: %w", maxChainConflictRetries, lastErr)
 }
 
 func (s *Service) List(ctx context.Context, filter auditdomain.ListFilter) ([]auditdomain.Event, error) {
