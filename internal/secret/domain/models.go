@@ -1,12 +1,17 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+var ErrSecretNotFound = errors.New("secret not found")
+
+func IsSecretNotFound(err error) bool { return err == ErrSecretNotFound }
 
 type SecretType string
 

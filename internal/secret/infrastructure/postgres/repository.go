@@ -20,6 +20,10 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
+func wrapSecretNotFound(namespace, path string, cause error) error {
+	return fmt.Errorf("secret %s/%s not found: %v: %v", namespace, path, secretdomain.ErrSecretNotFound, cause)
+}
+
 func (r *Repository) CreateNamespace(ctx context.Context, ns secretdomain.Namespace) error {
 	_, err := r.pool.Exec(ctx,
 		`INSERT INTO namespaces (id, name, description, created_at, updated_at)
@@ -96,7 +100,7 @@ func (r *Repository) GetSecret(ctx context.Context, namespace, path string) (sec
 	var s secretdomain.Secret
 	var typ string
 	if err := row.Scan(&s.ID, &s.Namespace, &s.Path, &typ, &s.CurrentVersion, &s.CreatedAt, &s.UpdatedAt); err != nil {
-		return secretdomain.Secret{}, fmt.Errorf("secret %s/%s not found: %w", namespace, path, err)
+		return secretdomain.Secret{}, wrapSecretNotFound(namespace, path, err)
 	}
 	s.Type = secretdomain.SecretType(typ)
 	return s, nil

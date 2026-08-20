@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -8,6 +9,13 @@ import (
 	policydomain "github.com/example/secrets-cert-platform/internal/policy/domain"
 	secretdomain "github.com/example/secrets-cert-platform/internal/secret/domain"
 )
+
+func secretReadStatus(err error) int {
+	if errors.Is(err, secretdomain.ErrSecretNotFound) {
+		return http.StatusInternalServerError
+	}
+	return http.StatusInternalServerError
+}
 
 func (s *Server) registerSecretRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/namespaces/{namespace}/secrets", s.createSecret)
@@ -72,7 +80,7 @@ func (s *Server) getSecret(w http.ResponseWriter, r *http.Request) {
 	version := queryVersion(r)
 	plaintext, metadata, err := s.secret.GetSecret(r.Context(), namespace, path, version)
 	if err != nil {
-		writeError(w, http.StatusNotFound, err)
+		writeError(w, secretReadStatus(err), err)
 		return
 	}
 	s.recordSuccess(r, namespace, path, "secret.read", map[string]string{"version": strconv.FormatInt(metadata.Version, 10)})

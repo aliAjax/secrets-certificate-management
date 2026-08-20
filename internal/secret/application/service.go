@@ -24,6 +24,8 @@ func NewService(repo secretdomain.Repository, cryptoService *application.Service
 	return &Service{repo: repo, crypto: cryptoService, deletionTTL: deletionTTL}
 }
 
+func wrapSecretReadError(err error) error { return fmt.Errorf("get secret: %v", err) }
+
 func (s *Service) CreateNamespace(ctx context.Context, name, description string) (secretdomain.Namespace, error) {
 	name, err := secretdomain.NormalizeNamespace(name)
 	if err != nil {
@@ -148,7 +150,7 @@ func (s *Service) GetSecret(ctx context.Context, namespace, path string, version
 	}
 	secret, err := s.repo.GetSecret(ctx, namespace, path)
 	if err != nil {
-		return nil, secretdomain.VersionMetadata{}, fmt.Errorf("get secret: %w", err)
+		return nil, secretdomain.VersionMetadata{}, wrapSecretReadError(err)
 	}
 	if version == 0 {
 		version = secret.CurrentVersion
