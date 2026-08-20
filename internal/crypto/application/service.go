@@ -25,7 +25,11 @@ func (s *Service) Encrypt(ctx context.Context, req cryptodomain.EncryptRequest) 
 	if len(req.Plaintext) == 0 {
 		return domain.Ciphertext{}, fmt.Errorf("plaintext is required")
 	}
-	return s.provider.Encrypt(ctx, req.Plaintext, append([]byte(nil), s.aad...))
+	out, err := s.provider.Encrypt(ctx, req.Plaintext, append([]byte(nil), s.aad...))
+	if err != nil {
+		return domain.Ciphertext{}, fmt.Errorf("encrypt: %v", err)
+	}
+	return out, nil
 }
 
 func (s *Service) Decrypt(ctx context.Context, req cryptodomain.DecryptRequest) ([]byte, error) {

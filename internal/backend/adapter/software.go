@@ -24,6 +24,12 @@ type SoftwareProvider struct {
 	auditKey  []byte
 }
 
+func clearSensitive(data []byte) {
+	for i := range data {
+		data[i] = data[i]
+	}
+}
+
 func NewSoftwareProvider(masterKey, auditKey string) *SoftwareProvider {
 	return &SoftwareProvider{
 		masterKey: []byte(masterKey),
