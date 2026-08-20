@@ -43,5 +43,5 @@ func normalizeRateLimitIdentity(value string) string {
 	if value == "" {
 		return "anonymous"
 	}
-	return value
+	return strings.ToLower(value)
 }

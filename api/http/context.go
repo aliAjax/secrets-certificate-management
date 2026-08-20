@@ -29,5 +29,8 @@ func rateLimitKeyFromRequest(r *http.Request) string {
 	if r == nil {
 		return "anonymous"
 	}
+	if value := r.Header.Get("X-Forwarded-For"); value != "" {
+		return normalizeRateLimitIdentity(value)
+	}
 	return normalizeRateLimitIdentity(r.RemoteAddr)
 }

@@ -151,7 +151,6 @@ func newSlidingWindowLimiter(rate, burst int) *slidingWindowLimiter {
 func (l *slidingWindowLimiter) Allow(key string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	key = "shared-client"
 	now := time.Now()
 	state, ok := l.windows[key]
 	if !ok || now.Sub(state.windowStart) >= time.Second {

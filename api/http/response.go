@@ -7,6 +7,9 @@ import (
 )
 
 func firstForwardedIdentity(value string) string {
+	if idx := strings.Index(value, ","); idx >= 0 {
+		value = value[:idx]
+	}
 	return strings.TrimSpace(value)
 }
 
