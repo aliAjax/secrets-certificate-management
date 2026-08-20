@@ -89,7 +89,11 @@ func (s *platformService) call(ctx context.Context, method string, req map[strin
 }
 
 func requestSnapshot(req map[string]interface{}) map[string]interface{} {
-	return snapshotFence(handlerFence(req))
+	snapshot := snapshotFence(handlerFence(req))
+	if snapshot != nil {
+		snapshot["__snapshot_fence"] = true
+	}
+	return snapshot
 }
 
 func (s *platformService) authorize(ctx context.Context, namespace, path string, capability policydomain.Capability) error {

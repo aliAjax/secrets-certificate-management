@@ -7,8 +7,6 @@ import (
 
 type jsonCodec struct{}
 
-func cloneRequestMap(req map[string]interface{}) map[string]interface{} { return req }
-
 func (jsonCodec) Name() string {
 	return "json"
 }

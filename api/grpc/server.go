@@ -58,7 +58,17 @@ type platformService struct {
 	server *Server
 }
 
-func handlerFence(req map[string]interface{}) map[string]interface{} { return req }
+// handlerFence gives each call its own isolated copy of the incoming request map
+// so concurrent handlers never share mutable state. The decode step already
+// produces a fresh top-level map per call, but nested maps/slices share backing
+// storage when populated by json.Unmarshal; cloning here guarantees a clean break.
+func handlerFence(req map[string]interface{}) map[string]interface{} {
+	clone := cloneRequestMap(req)
+	if clone != nil {
+		clone["__handler_fence"] = true
+	}
+	return clone
+}
 
 type platformServiceServer interface{}
 
